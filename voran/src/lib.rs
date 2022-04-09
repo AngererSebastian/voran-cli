@@ -3,9 +3,18 @@ use rand::seq::IteratorRandom;
 #[cfg(test)]
 mod tests {
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn length_stays_in_bounds() {
+        let opts = super::Options {
+            max_len: 12,
+            min_len: 6,
+            ..Default::default()
+        };
+        let words = super::generate_words(&opts);
+
+        words
+            .take(50)
+            .map(|w| w.len() >= opts.min_len && w.len() <= opts.max_len)
+            .for_each(|b| assert!(b))
     }
 }
 
@@ -37,26 +46,35 @@ impl Default for Options {
 }
 
 pub fn generate_word_with_rng<R: rand::Rng>(opt: &Options, rng: &mut R) -> String {
-    let mut chars_left = rng.gen_range(opt.min_len..=opt.max_len);
+    let size = rng.gen_range(opt.min_len..=opt.max_len);
 
     let mut was_voc = false;
-    //let mut kind_count = 0;
+    let mut vowels_count = 0;
 
-    let mut result = String::new();
+    let mut result = if rng.gen_bool(0.5) {
+        was_voc = true;
+        vowels_count = 1;
+        random_elem_with_len(&opt.vowels, size, rng)
+    } else {
+        random_elem_with_len(&opt.constants, size, rng)
+    }
+    .to_string();
 
-    while chars_left > 0 {
+    while size - result.len() > 0 {
+        let left = size - result.len();
         let next =
         // 70% chance there is a non voc after a vocal
-        if was_voc && rng.gen_bool(0.7) {
+        if was_voc && rng.gen_bool(0.7 + vowels_count as f64 * 0.1) {
+            vowels_count = 0;
             was_voc = false;
-            random_elem_with_len(&opt.constants, chars_left, rng)
+            random_elem_with_len(&opt.constants, left, rng)
         }
         else {
+            if !was_voc { vowels_count += 1;}
             was_voc = true;
-            random_elem_with_len(&opt.vowels, chars_left, rng)
+            random_elem_with_len(&opt.vowels, left, rng)
         };
 
-        chars_left -= next.len();
         result.push_str(next);
     }
 
