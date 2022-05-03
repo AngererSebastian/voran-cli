@@ -1,4 +1,5 @@
 #[derive(structopt::StructOpt)]
+#[structopt(about = "generate random voicable names")]
 struct Args {
     /// how many names should be generated,
     /// when not specified, creates a continous stream of names

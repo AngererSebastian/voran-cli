@@ -18,12 +18,21 @@ mod tests {
     }
 }
 
+/// options for random word generation
 pub struct Options {
+    /// the max length of any word in characters
     pub max_len: usize,
+    /// the minimum length of any word in characters
     pub min_len: usize,
     // TODO: get this into the algorithm
     pub max_constant_chain: usize,
+    /// the vowels used for generation
+    /// ## default
+    /// the vowels inside `src/vowels.txt`
     pub vowels: Vec<String>,
+    /// the constants used for generation
+    /// ## default
+    /// the vowels inside `src/constants.txt`
     pub constants: Vec<String>,
 }
 
@@ -45,6 +54,7 @@ impl Default for Options {
     }
 }
 
+/// generate one word with the given rng
 pub fn generate_word_with_rng<R: rand::Rng>(opt: &Options, rng: &mut R) -> String {
     let size = rng.gen_range(opt.min_len..=opt.max_len);
 
@@ -92,13 +102,20 @@ fn random_elem_with_len<'a, R: rand::Rng>(
         .expect("no chars?")
 }
 
+/// generate a random word, uses thread_rng
 pub fn generate_word(opt: &Options) -> String {
     let mut rng = rand::thread_rng();
     generate_word_with_rng(opt, &mut rng)
 }
 
+/// generate a never ending iterator of random words, uses thread_rng
 pub fn generate_words<'a>(opt: &'a Options) -> impl Iterator<Item = String> + 'a {
     let mut rng = rand::thread_rng();
 
     std::iter::repeat_with(move || generate_word_with_rng(opt, &mut rng))
+}
+
+/// generate never ending random words, with given rng
+pub fn generate_words_with_rng<'a, R: rand::Rng>(opt: &'a Options, rng: &'a mut R) -> impl Iterator<Item = String> + 'a{
+    std::iter::repeat_with(move || generate_word_with_rng(opt, rng))
 }
