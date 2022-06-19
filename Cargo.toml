@@ -3,6 +3,11 @@ name = "voran-cli"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = [
+	"voran"
+]
+
 [[bin]]
 name = "voran"
 path = "src/main.rs"
@@ -11,5 +16,6 @@ path = "src/main.rs"
 
 [dependencies]
 voran = { path = "voran" }
+regex = "1.5.6"
 structopt = { version = "0.3", features = [ "paw" ] }
 paw = "1.0"

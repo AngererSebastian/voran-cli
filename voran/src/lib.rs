@@ -59,11 +59,11 @@ pub fn generate_word_with_rng<R: rand::Rng>(opt: &Options, rng: &mut R) -> Strin
     let size = rng.gen_range(opt.min_len..=opt.max_len);
 
     let mut was_voc = false;
-    let mut vowels_count = 0;
+    let mut current_count = 0;
 
     let mut result = if rng.gen_bool(0.5) {
         was_voc = true;
-        vowels_count = 1;
+        current_count = 1;
         random_elem_with_len(&opt.vowels, size, rng)
     } else {
         random_elem_with_len(&opt.constants, size, rng)
@@ -72,15 +72,19 @@ pub fn generate_word_with_rng<R: rand::Rng>(opt: &Options, rng: &mut R) -> Strin
 
     while size - result.len() > 0 {
         let left = size - result.len();
+        let another_constant =
+            !was_voc && current_count == 1 && result.len() > 0 && rng.gen_bool(0.1);
         let next =
-        // 70% chance there is a non voc after a vocal
-        if was_voc && rng.gen_bool(0.7 + vowels_count as f64 * 0.1) {
-            vowels_count = 0;
+        // 70% chance there is a non voc after a vocal or 10% chance there there is a constant after a constant
+        // TODO: make it so it can't be the end
+        if was_voc && rng.gen_bool(0.7 + current_count as f64 * 0.1) || another_constant {
+            current_count = 0;
             was_voc = false;
             random_elem_with_len(&opt.constants, left, rng)
-        }
-        else {
-            if !was_voc { vowels_count += 1;}
+        } else {
+            if !was_voc {
+                current_count += 1;
+            }
             was_voc = true;
             random_elem_with_len(&opt.vowels, left, rng)
         };

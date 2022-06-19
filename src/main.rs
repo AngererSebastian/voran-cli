@@ -1,3 +1,4 @@
+#![feature(box_syntax)]
 #[derive(structopt::StructOpt)]
 #[structopt(about = "generate random voicable names")]
 struct Args {
@@ -11,6 +12,8 @@ struct Args {
     // the maximum length of the name
     #[structopt(long, short = "x", default_value = "12")]
     max: usize,
+    #[structopt(short, long)]
+    regex: Option<String>,
 }
 
 #[paw::main]
@@ -20,10 +23,15 @@ fn main(args: Args) {
         max_len: args.max,
         ..Default::default()
     };
-    let mut words: Box<dyn Iterator<Item = String>> = Box::new(voran::generate_words(&opt));
+    let mut words: Box<dyn Iterator<Item = String>> = box voran::generate_words(&opt);
+
+    if let Some(r) = args.regex {
+        let regex = regex::Regex::new(&r).expect("invalid regex");
+        words = box words.filter(move |w| regex.is_match(w));
+    }
 
     if let Some(n) = args.number {
-        words = Box::new(words.take(n));
+        words = box words.take(n);
     }
 
     words.for_each(|w| println!("{w}"))
